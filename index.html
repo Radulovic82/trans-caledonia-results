@@ -44,6 +44,31 @@
   .chip[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
   .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   input[type=search] { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--page); color: var(--ink); font: inherit; }
+  .riders-card { display: flex; flex-direction: column; min-height: 0; }
+  .riders-card > * { flex: none; }
+  .riders-card .picker { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+  .riders-card .riders { flex: 1 1 auto; min-height: 120px; }
+  .picker summary { display: none; }
+  @media (max-width: 700px) {
+    .picker summary { display: block; cursor: pointer; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; font-weight: 600; font-size: 13.5px; user-select: none; }
+    .picker summary::marker, .picker summary::-webkit-details-marker { display: none; content: ''; }
+    .picker summary::after { content: ' ▾'; color: var(--muted); }
+    .picker[open] summary::after { content: ' ▴'; }
+    .picker[open] summary { margin-bottom: 8px; }
+    header h1 { font-size: 19px; } header p { font-size: 13px; }
+    .card { padding: 12px; border-radius: 6px; }
+    .rider { padding: 9px 10px; font-size: 14px; }
+    .rider .cat { font-size: 11.5px; }
+    .chip, .btn { padding: 7px 12px; font-size: 13px; }
+    .toggle button { padding: 7px 10px; }
+    .tag { padding: 5px 10px 5px 8px; font-size: 13px; }
+    .tag button { font-size: 18px; padding: 0 4px; }
+    .chart-wrap { height: 320px; }
+    main { gap: 10px; } section.charts { gap: 10px; } aside { gap: 10px; }
+    .hint { font-size: 11.5px; }
+    .card-head .btn.reset { order: -1; }
+    th, td { padding: 7px 8px; }
+  }
   .riders { overflow: auto; max-height: 46vh; border: 1px solid var(--border); border-radius: 6px; }
   @media (max-width: 900px) { .riders { max-height: 240px; } }
   .rider { display: flex; align-items: center; gap: 8px; padding: 5px 10px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 13px; }
@@ -66,6 +91,7 @@
   .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .toggle button { border: 0; background: transparent; color: var(--ink-2); padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
   .toggle button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+  .card-head .btn.reset { margin-left: auto; }
   .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
   th, td { padding: 5px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
@@ -92,7 +118,7 @@
       <p class="sub">Leader, gaps and stage positions are computed inside this group.</p>
       <div class="chips" id="scope"></div>
     </div>
-    <div class="card" style="display:flex;flex-direction:column;min-height:0">
+    <div class="card riders-card">
       <h2>Riders</h2>
       <p class="sub">Pick up to 8 riders to highlight. Everyone else stays as a thin grey line for context.</p>
       <div class="selected" id="selected"></div>
@@ -100,9 +126,12 @@
         <button class="btn" id="top5">Top 5 in field</button>
         <button class="btn" id="clear">Clear</button>
       </div>
-      <input type="search" id="search" placeholder="Search name or bib" aria-label="Search riders">
-      <div class="riders" id="riders" style="margin-top:8px"></div>
-      <p class="hint">Tip: click a grey line in a chart to add that rider.</p>
+      <details id="picker" class="picker" open>
+        <summary>Choose riders</summary>
+        <input type="search" id="search" placeholder="Search name or bib" aria-label="Search riders">
+        <div class="riders" id="riders" style="margin-top:8px"></div>
+      </details>
+      <p class="hint">Tip: click a grey line in a chart to add that rider. Drag a box on a chart to zoom in (pinch on a phone), or hold Ctrl and scroll.</p>
     </div>
   </aside>
 
@@ -110,7 +139,7 @@
     <div class="card">
       <div class="card-head">
         <div><h2>Gap to leader, stage by stage</h2><p class="sub">Cumulative time behind the field leader after each timed stage. Lower is better.</p></div>
-        <div class="toggle" id="gapMode"><button aria-pressed="true" data-v="gap">Gap to leader</button><button aria-pressed="false" data-v="rank">Position</button></div>
+        <button class="btn reset" data-reset="cGap" hidden>Reset zoom</button><div class="toggle" id="gapMode"><button aria-pressed="true" data-v="gap">Gap to leader</button><button aria-pressed="false" data-v="rank">Position</button></div>
       </div>
       <div class="chart-wrap"><canvas id="cGap" role="img" aria-label="Cumulative gap to leader per stage"></canvas></div>
     </div>
@@ -118,7 +147,7 @@
     <div class="card">
       <div class="card-head">
         <div><h2>Stage by stage</h2><p class="sub">How far behind the stage winner each rider was on every stage, in seconds.</p></div>
-        <div class="toggle" id="stageMode"><button aria-pressed="true" data-v="gap">Gap to stage winner</button><button aria-pressed="false" data-v="rank">Stage position</button></div>
+        <button class="btn reset" data-reset="cStage" hidden>Reset zoom</button><div class="toggle" id="stageMode"><button aria-pressed="true" data-v="gap">Gap to stage winner</button><button aria-pressed="false" data-v="rank">Stage position</button></div>
       </div>
       <div class="chart-wrap"><canvas id="cStage" role="img" aria-label="Gap to stage winner per stage"></canvas></div>
     </div>
@@ -126,7 +155,7 @@
     <div class="card">
       <div class="card-head">
         <div><h2>Day by day</h2><p class="sub">Overall position in the field at the end of each race day.</p></div>
-        <div class="toggle" id="dayMode"><button aria-pressed="true" data-v="rank">Overall position</button><button aria-pressed="false" data-v="gap">Day gap to day winner</button></div>
+        <button class="btn reset" data-reset="cDay" hidden>Reset zoom</button><div class="toggle" id="dayMode"><button aria-pressed="true" data-v="rank">Overall position</button><button aria-pressed="false" data-v="gap">Day gap to day winner</button></div>
       </div>
       <div class="chart-wrap" style="height:300px"><canvas id="cDay" role="img" aria-label="Overall position after each day"></canvas></div>
     </div>
@@ -141,12 +170,16 @@
 <footer id="footer"></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <script>
 (async function () {
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const SLOTS = () => [1,2,3,4,5,6,7,8].map(i => css('--s' + i));
   const MAX_SEL = 8;
   const narrow = () => window.innerWidth < 700;
+  let lastZoom = 0;
+  const coarse = matchMedia('(pointer: coarse)').matches;
 
   const res = await fetch('data/results.json', { cache: 'no-store' });
   const D = await res.json();
@@ -267,8 +300,10 @@
       const { ctx, chartArea: a, scales: { x } } = chart; ctx.save();
       D.days.forEach((dm, k) => {
         const idx = stages.map((s, i) => s.day === dm.day ? i : -1).filter(i => i >= 0);
-        const x0 = x.getPixelForValue(idx[0]) - (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
-        const x1 = x.getPixelForValue(idx[idx.length - 1]) + (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
+        const half = (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
+        const x0 = Math.max(a.left, x.getPixelForValue(idx[0]) - half);
+        const x1 = Math.min(a.right, x.getPixelForValue(idx[idx.length - 1]) + half);
+        if (x1 - x0 < 24) return;
         if (k % 2) { ctx.fillStyle = css('--border'); ctx.fillRect(x0, a.top, x1 - x0, a.bottom - a.top); }
         ctx.fillStyle = css('--muted'); ctx.font = '600 11px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('Day ' + dm.day, (x0 + x1) / 2, a.top - 8);
@@ -284,11 +319,19 @@
       layout: { padding: { top: bands ? 18 : 4, right: narrow() ? 8 : 90 } },
       interaction: { mode: 'index', intersect: false },
       onClick(evt, els, chart) {
+        if (Date.now() - lastZoom < 400) return;
         const hit = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true)[0];
         if (!hit) return; const ds = chart.data.datasets[hit.datasetIndex]; if (ds.bib) toggle(ds.bib);
       },
       onHover(evt, els, chart) { const hit = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true)[0]; chart.canvas.style.cursor = hit ? 'pointer' : 'default'; },
       plugins: {
+        zoom: {
+          zoom: { drag: { enabled: true, backgroundColor: 'rgba(23,152,172,0.15)', borderColor: css('--accent'), borderWidth: 1 },
+            wheel: { enabled: true, modifierKey: 'ctrl' }, pinch: { enabled: true }, mode: 'xy',
+            onZoomComplete: ({ chart }) => { lastZoom = Date.now(); syncReset(chart); } },
+          pan: { enabled: !coarse, mode: 'xy', modifierKey: 'shift', onPanComplete: ({ chart }) => syncReset(chart) },
+          limits: { x: { min: 'original', max: 'original' }, y: { min: 'original', max: 'original' } },
+        },
         legend: { display: true, position: 'bottom', align: 'start', labels: { boxWidth: 12, boxHeight: 3, usePointStyle: false, color: css('--ink-2'),
           filter: item => item.text && !item.text.startsWith('__') } },
         tooltip: {
@@ -326,7 +369,9 @@
   }
 
   const charts = {};
-  function mkChart(id, cfg) { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update(); } else charts[id] = new Chart(document.getElementById(id), { type: 'line', ...cfg }); }
+  function syncReset(chart) { const b = document.querySelector(`[data-reset="${chart.canvas.id}"]`); if (b) b.hidden = !chart.isZoomedOrPanned(); }
+  document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => { const c = charts[b.dataset.reset]; if (c) { c.resetZoom(); syncReset(c); } }));
+  function mkChart(id, cfg) { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update(); syncReset(charts[id]); } else charts[id] = new Chart(document.getElementById(id), { type: 'line', ...cfg }); }
 
   function renderCharts() {
     const F = field(); const calc = compute(F);
@@ -401,6 +446,7 @@
   if (D.note) { const n = document.getElementById('note'); n.textContent = D.note; n.hidden = false; }
   document.getElementById('footer').textContent = `Data pulled ${new Date(D.fetchedAt).toLocaleString()} · unofficial, for fun · times in min:sec, gaps in seconds`;
 
+  if (narrow()) document.getElementById('picker').open = false;
   render();
 })();
 </script>
