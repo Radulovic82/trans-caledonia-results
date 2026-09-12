@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trans Caledonia 2026 results</title>
+<meta name="description" content="Compare rider results across every timed stage of the MTB Enduro Trans Caledonia 2026.">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --ghost: rgba(11,11,11,0.16);
+    --accent: #1798ac;
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --ghost: rgba(255,255,255,0.18);
+      --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { overflow-x: hidden; }
+  main > * { min-width: 0; }
+  tr.total td { background: var(--page); }
+  html, body { margin: 0; background: var(--page); color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--accent); }
+  header { padding: 20px 24px 8px; }
+  header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 650; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--ink-2); }
+  .note { margin: 8px 24px 0; padding: 8px 12px; border-left: 3px solid var(--s2); background: var(--surface); color: var(--ink-2); font-size: 13px; }
+  main { display: grid; grid-template-columns: 300px 1fr; gap: 16px; padding: 16px 24px 32px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px; } header, .note { padding-left: 12px; padding-right: 12px; margin-left: 12px; margin-right: 12px;} header {margin:0;} }
+  aside { position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); display: flex; flex-direction: column; gap: 10px; }
+  @media (max-width: 900px) { aside { position: static; max-height: none; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .card h2 { margin: 0 0 2px; font-size: 15px; font-weight: 650; }
+  .card .sub { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--border); background: transparent; color: var(--ink-2); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  input[type=search] { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--page); color: var(--ink); font: inherit; }
+  .riders { overflow: auto; max-height: 46vh; border: 1px solid var(--border); border-radius: 6px; }
+  @media (max-width: 900px) { .riders { max-height: 240px; } }
+  .rider { display: flex; align-items: center; gap: 8px; padding: 5px 10px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .rider:last-child { border-bottom: 0; }
+  .rider:hover { background: var(--page); }
+  .rider input { margin: 0; }
+  .rider .rk { width: 26px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .rider .nm { flex: 1; }
+  .rider .cat { color: var(--muted); font-size: 12px; }
+  .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--ghost); flex: none; }
+  .selected { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px 2px 6px; border-radius: 999px; border: 1px solid var(--border); font-size: 12.5px; }
+  .tag button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; }
+  .btn { border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 5px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .btn:hover { background: var(--page); }
+  .hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  section.charts { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .chart-wrap { position: relative; height: 380px; }
+  @media (max-width: 900px) { .chart-wrap { height: 300px; } }
+  .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .toggle button { border: 0; background: transparent; color: var(--ink-2); padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .toggle button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+  .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 5px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+  th { color: var(--muted); font-weight: 600; }
+  td.best { font-weight: 650; }
+  .tbl-wrap { overflow-x: auto; }
+  .stage-note { color: var(--muted); font-size: 12px; }
+  footer { color: var(--muted); font-size: 12px; padding: 0 24px 24px; }
+  .sr-only { position: absolute; left: -9999px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Trans Caledonia 2026 results</h1>
+  <p id="subtitle">Loading results…</p>
+</header>
+<div class="note" id="note" hidden></div>
+
+<main>
+  <aside>
+    <div class="card">
+      <h2>Field</h2>
+      <p class="sub">Leader, gaps and stage positions are computed inside this group.</p>
+      <div class="chips" id="scope"></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;min-height:0">
+      <h2>Riders</h2>
+      <p class="sub">Pick up to 8 riders to highlight. Everyone else stays as a thin grey line for context.</p>
+      <div class="selected" id="selected"></div>
+      <div class="row" style="margin:8px 0">
+        <button class="btn" id="top5">Top 5 in field</button>
+        <button class="btn" id="clear">Clear</button>
+      </div>
+      <input type="search" id="search" placeholder="Search name or bib" aria-label="Search riders">
+      <div class="riders" id="riders" style="margin-top:8px"></div>
+      <p class="hint">Tip: click a grey line in a chart to add that rider.</p>
+    </div>
+  </aside>
+
+  <section class="charts">
+    <div class="card">
+      <div class="card-head">
+        <div><h2>Gap to leader, stage by stage</h2><p class="sub">Cumulative time behind the field leader after each timed stage. Lower is better.</p></div>
+        <div class="toggle" id="gapMode"><button aria-pressed="true" data-v="gap">Gap to leader</button><button aria-pressed="false" data-v="rank">Position</button></div>
+      </div>
+      <div class="chart-wrap"><canvas id="cGap" role="img" aria-label="Cumulative gap to leader per stage"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><h2>Stage by stage</h2><p class="sub">How far behind the stage winner each rider was on every stage, in seconds.</p></div>
+        <div class="toggle" id="stageMode"><button aria-pressed="true" data-v="gap">Gap to stage winner</button><button aria-pressed="false" data-v="rank">Stage position</button></div>
+      </div>
+      <div class="chart-wrap"><canvas id="cStage" role="img" aria-label="Gap to stage winner per stage"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div><h2>Day by day</h2><p class="sub">Overall position in the field at the end of each race day.</p></div>
+        <div class="toggle" id="dayMode"><button aria-pressed="true" data-v="rank">Overall position</button><button aria-pressed="false" data-v="gap">Day gap to day winner</button></div>
+      </div>
+      <div class="chart-wrap" style="height:300px"><canvas id="cDay" role="img" aria-label="Overall position after each day"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h2>Stage times</h2>
+      <p class="sub" id="tblSub">Times for the highlighted riders. Bold marks the fastest of the highlighted riders on that stage.</p>
+      <div class="tbl-wrap"><table id="tbl"></table></div>
+    </div>
+  </section>
+</main>
+<footer id="footer"></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(async function () {
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const SLOTS = () => [1,2,3,4,5,6,7,8].map(i => css('--s' + i));
+  const MAX_SEL = 8;
+  const narrow = () => window.innerWidth < 700;
+
+  const res = await fetch('data/results.json', { cache: 'no-store' });
+  const D = await res.json();
+
+  // ---- stage index (global across days), cancelled excluded from cumulative time
+  const stages = []; // {day, s, label, cancelled}
+  for (const dm of D.days) for (let s = 1; s <= dm.stages; s++)
+    stages.push({ day: dm.day, s, label: `D${dm.day} S${s}`, cancelled: dm.cancelled.includes(s) });
+  const riders = D.riders;
+  const byBib = Object.fromEntries(riders.map(r => [r.bib, r]));
+  for (const r of riders) {
+    r.stageTimes = stages.map(st => { const d = r.days[st.day]; const x = d && d.stages[st.s - 1]; return x ? x.time : null; });
+    r.cum = []; let acc = 0, alive = true;
+    stages.forEach((st, i) => {
+      const t = r.stageTimes[i];
+      if (t == null) alive = false;
+      if (alive && !st.cancelled) acc += t;
+      r.cum.push(alive ? acc : null);
+    });
+  }
+
+  // ---- state
+  const scopes = [
+    { id: 'all', label: 'Everyone', f: () => true },
+    { id: 'm', label: 'Men', f: r => r.gender === 'm' },
+    { id: 'f', label: 'Women', f: r => r.gender === 'f' },
+    { id: 'pro', label: 'Pro', f: r => r.category === 'Pro' },
+    { id: 'm18', label: 'Men 18-39', f: r => r.gender === 'm' && r.category === '18-39' },
+    { id: 'm40', label: 'Men 40-49', f: r => r.gender === 'm' && r.category === '40-49' },
+    { id: 'm50', label: 'Men 50+', f: r => r.gender === 'm' && r.category === '50+' },
+    { id: 'f18', label: 'Women 18-39', f: r => r.gender === 'f' && r.category === '18-39' },
+    { id: 'f40', label: 'Women 40-49', f: r => r.gender === 'f' && r.category === '40-49' },
+  ];
+  const state = { scope: 'all', sel: [], slots: {}, gapMode: 'gap', stageMode: 'gap', dayMode: 'rank' };
+  (function readHash() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (h.get('f') && scopes.some(s => s.id === h.get('f'))) state.scope = h.get('f');
+    const r = (h.get('r') || '').split(',').map(Number).filter(b => byBib[b]).slice(0, MAX_SEL);
+    r.forEach(b => select(b, true));
+  })();
+  function writeHash() {
+    const p = new URLSearchParams();
+    if (state.scope !== 'all') p.set('f', state.scope);
+    if (state.sel.length) p.set('r', state.sel.join(','));
+    history.replaceState(null, '', p.toString() ? '#' + p : location.pathname);
+  }
+  function select(bib, silent) {
+    if (state.sel.includes(bib)) return;
+    if (state.sel.length >= MAX_SEL) { flash(`Up to ${MAX_SEL} riders can be highlighted at once. Remove one first.`); return; }
+    const used = new Set(Object.values(state.slots));
+    let slot = 0; while (used.has(slot)) slot++;
+    state.slots[bib] = slot; state.sel.push(bib);
+    if (!silent) render();
+  }
+  function deselect(bib) { state.sel = state.sel.filter(b => b !== bib); delete state.slots[bib]; render(); }
+  function toggle(bib) { state.sel.includes(bib) ? deselect(bib) : select(bib); }
+  function colorOf(bib) { return SLOTS()[state.slots[bib]]; }
+  let flashT; function flash(msg) { const el = document.querySelector('.hint'); const old = el.dataset.old || el.textContent; el.dataset.old = old; el.textContent = msg; clearTimeout(flashT); flashT = setTimeout(() => el.textContent = old, 3500); }
+
+  // ---- derived per scope
+  function field() { const sc = scopes.find(s => s.id === state.scope); return riders.filter(sc.f); }
+  function compute(F) {
+    const n = stages.length;
+    const leaderCum = stages.map((_, i) => Math.min(...F.map(r => r.cum[i]).filter(v => v != null).concat([Infinity])));
+    const stageBest = stages.map((_, i) => Math.min(...F.map(r => r.stageTimes[i]).filter(v => v != null).concat([Infinity])));
+    const out = new Map();
+    for (const r of F) out.set(r.bib, {
+      gap: r.cum.map((c, i) => c == null || !isFinite(leaderCum[i]) ? null : +(c - leaderCum[i]).toFixed(2)),
+      sgap: r.stageTimes.map((t, i) => t == null ? null : +(t - stageBest[i]).toFixed(2)),
+      pos: new Array(n).fill(null), spos: new Array(n).fill(null),
+      dayPos: D.days.map(() => null), dayGap: D.days.map(() => null),
+    });
+    for (let i = 0; i < n; i++) {
+      const rankBy = (get, key) => F.filter(r => get(r) != null).sort((a, b) => get(a) - get(b))
+        .forEach((r, k) => out.get(r.bib)[key][i] = k + 1);
+      rankBy(r => r.cum[i], 'pos');
+      rankBy(r => r.stageTimes[i], 'spos');
+    }
+    D.days.forEach((dm, di) => {
+      const lastIdx = stages.map((s, i) => s.day === dm.day ? i : -1).filter(i => i >= 0).pop();
+      F.filter(r => r.cum[lastIdx] != null).sort((a, b) => a.cum[lastIdx] - b.cum[lastIdx]).forEach((r, k) => out.get(r.bib).dayPos[di] = k + 1);
+      const tot = r => r.days[dm.day] && r.days[dm.day].total;
+      const best = Math.min(...F.map(tot).filter(v => v != null).concat([Infinity]));
+      F.forEach(r => { const t = tot(r); out.get(r.bib).dayGap[di] = t == null || !isFinite(best) ? null : +(t - best).toFixed(2); });
+    });
+    return out;
+  }
+
+  // ---- formatting
+  const fmt = s => { if (s == null) return '–'; const neg = s < 0; s = Math.abs(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    const body = h ? `${h}:${String(m).padStart(2,'0')}:${sec.toFixed(2).padStart(5,'0')}` : `${m}:${sec.toFixed(2).padStart(5,'0')}`; return (neg ? '-' : '') + body; };
+  const fmtTick = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = Math.round(s % 60); return h ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}`; };
+  const fmtGap = s => s == null ? '–' : s === 0 ? '0.00' : '+' + fmt(s);
+  const ord = n => n == null ? '–' : n + (['th','st','nd','rd'][(n % 100 - 20) % 10] || ['th','st','nd','rd'][n % 100] || 'th');
+
+  // ---- charts
+  Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+  Chart.defaults.font.size = 12;
+  const endLabels = {
+    id: 'endLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart; ctx.save(); ctx.font = '600 12px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.textBaseline = 'middle';
+      const placed = [];
+      chart.data.datasets.forEach((ds, di) => {
+        if (!ds.highlight || !chart.isDatasetVisible(di) || narrow()) return;
+        const meta = chart.getDatasetMeta(di);
+        let last = null; for (let i = meta.data.length - 1; i >= 0; i--) if (ds.data[i] != null) { last = meta.data[i]; break; }
+        if (!last) return;
+        let y = last.y; while (placed.some(p => Math.abs(p - y) < 13)) y += 13; placed.push(y);
+        ctx.fillStyle = css('--ink'); ctx.fillText(ds.label, Math.min(last.x + 8, chart.chartArea.right - 4), y);
+      }); ctx.restore();
+    }
+  };
+  const dayBands = {
+    id: 'dayBands',
+    beforeDraw(chart) {
+      if (!chart.options.dayBands) return;
+      const { ctx, chartArea: a, scales: { x } } = chart; ctx.save();
+      D.days.forEach((dm, k) => {
+        const idx = stages.map((s, i) => s.day === dm.day ? i : -1).filter(i => i >= 0);
+        const x0 = x.getPixelForValue(idx[0]) - (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
+        const x1 = x.getPixelForValue(idx[idx.length - 1]) + (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2;
+        if (k % 2) { ctx.fillStyle = css('--border'); ctx.fillRect(x0, a.top, x1 - x0, a.bottom - a.top); }
+        ctx.fillStyle = css('--muted'); ctx.font = '600 11px system-ui, -apple-system, "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Day ' + dm.day, (x0 + x1) / 2, a.top - 8);
+      }); ctx.restore();
+    }
+  };
+  Chart.register(endLabels, dayBands);
+
+  function baseOptions({ yTitle, invert, dayBands: bands, xLabels, yFmt, unit }) {
+    return {
+      responsive: true, maintainAspectRatio: false, animation: false, normalized: true, spanGaps: false,
+      dayBands: bands,
+      layout: { padding: { top: bands ? 18 : 4, right: narrow() ? 8 : 90 } },
+      interaction: { mode: 'index', intersect: false },
+      onClick(evt, els, chart) {
+        const hit = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true)[0];
+        if (!hit) return; const ds = chart.data.datasets[hit.datasetIndex]; if (ds.bib) toggle(ds.bib);
+      },
+      onHover(evt, els, chart) { const hit = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true)[0]; chart.canvas.style.cursor = hit ? 'pointer' : 'default'; },
+      plugins: {
+        legend: { display: true, position: 'bottom', align: 'start', labels: { boxWidth: 12, boxHeight: 3, usePointStyle: false, color: css('--ink-2'),
+          filter: item => item.text && !item.text.startsWith('__') } },
+        tooltip: {
+          backgroundColor: css('--surface'), titleColor: css('--ink'), bodyColor: css('--ink-2'), borderColor: css('--border'), borderWidth: 1, padding: 10,
+          itemSort: (a, b) => (a.raw ?? 1e9) - (b.raw ?? 1e9),
+          filter: (item, idx, items) => { const ds = item.dataset; if (ds.highlight) return true;
+            // one nearest grey line when nothing is highlighted, otherwise hide grey
+            const anyHi = items.some(i => i.dataset.highlight); return !anyHi && idx < 3; },
+          callbacks: { label: c => ` ${c.dataset.label.replace(/^__/, '')}: ${yFmt(c.raw)}`, labelColor: c => ({ borderColor: c.dataset.borderColor, backgroundColor: c.dataset.borderColor }) },
+        },
+      },
+      scales: {
+        x: { grid: { color: css('--grid') }, ticks: { color: css('--muted'), maxRotation: 0, autoSkip: true }, border: { color: css('--axis') }, labels: xLabels },
+        y: { reverse: !!invert, title: { display: true, text: yTitle, color: css('--muted') }, grid: { color: css('--grid') }, border: { color: css('--axis'), display: false },
+          ticks: { color: css('--muted'), precision: 0, callback: v => invert ? (Number.isInteger(v) && v >= 1 ? v : '') : (unit === 'time' ? fmtTick(v) : v) }, ...(invert ? { min: 1 } : { beginAtZero: true }) },
+      },
+    };
+  }
+
+  function seriesFor(F, calc, pick, invert) {
+    const grey = css('--ghost');
+    const hi = [], lo = [];
+    for (const r of F) {
+      const s = state.sel.includes(r.bib);
+      (s ? hi : lo).push({
+        label: (s ? '' : '__') + r.name, bib: r.bib, highlight: s, data: pick(calc.get(r.bib), r),
+        borderColor: s ? colorOf(r.bib) : grey, backgroundColor: s ? colorOf(r.bib) : grey,
+        borderWidth: s ? 2.2 : 1, pointRadius: s ? 3 : 0, pointHoverRadius: s ? 5 : 3, pointBorderColor: css('--surface'), pointBorderWidth: s ? 1.5 : 0,
+        tension: 0.15, order: s ? 0 : 1,
+      });
+    }
+    // sort highlighted by slot so legend order is stable
+    hi.sort((a, b) => state.slots[a.bib] - state.slots[b.bib]);
+    return [...hi, ...lo];
+  }
+
+  const charts = {};
+  function mkChart(id, cfg) { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update(); } else charts[id] = new Chart(document.getElementById(id), { type: 'line', ...cfg }); }
+
+  function renderCharts() {
+    const F = field(); const calc = compute(F);
+    const stageLabels = stages.map(s => s.label + (s.cancelled ? ' ✕' : ''));
+    const gapMode = state.gapMode === 'gap';
+    mkChart('cGap', { data: { labels: stageLabels, datasets: seriesFor(F, calc, c => gapMode ? c.gap : c.pos) },
+      options: baseOptions({ yTitle: gapMode ? 'behind leader' : 'overall position', invert: !gapMode, dayBands: true, yFmt: gapMode ? fmtGap : ord, unit: gapMode ? 'time' : '' }) });
+    const stGap = state.stageMode === 'gap';
+    mkChart('cStage', { data: { labels: stageLabels, datasets: seriesFor(F, calc, c => stGap ? c.sgap : c.spos) },
+      options: baseOptions({ yTitle: stGap ? 'behind stage winner' : 'stage position', invert: !stGap, dayBands: true, yFmt: stGap ? fmtGap : ord, unit: stGap ? 'time' : '' }) });
+    const dRank = state.dayMode === 'rank';
+    mkChart('cDay', { data: { labels: D.days.map(d => 'Day ' + d.day), datasets: seriesFor(F, calc, c => dRank ? c.dayPos : c.dayGap) },
+      options: baseOptions({ yTitle: dRank ? 'overall position' : 'behind day winner', invert: dRank, dayBands: false, yFmt: dRank ? ord : fmtGap, unit: dRank ? '' : 'time' }) });
+    renderTable(F, calc);
+  }
+
+  function renderTable(F, calc) {
+    const tbl = document.getElementById('tbl');
+    const sel = state.sel.map(b => byBib[b]).filter(r => F.includes(r));
+    if (!sel.length) { tbl.innerHTML = `<tr><td style="text-align:left;color:var(--muted)">Highlight riders to see their stage times here.</td></tr>`; return; }
+    let h = '<thead><tr><th>Stage</th>' + sel.map(r => `<th><span class="sw" style="display:inline-block;vertical-align:middle;background:${colorOf(r.bib)};margin-right:6px"></span>${r.name}</th>`).join('') + '</tr></thead><tbody>';
+    stages.forEach((st, i) => {
+      const vals = sel.map(r => r.stageTimes[i]); const best = Math.min(...vals.filter(v => v != null).concat([Infinity]));
+      h += `<tr><td>${st.label}${st.cancelled ? ' <span class="stage-note">(cancelled, not counted)</span>' : ''}</td>` +
+        vals.map((v, k) => `<td class="${v === best && isFinite(best) ? 'best' : ''}">${fmt(v)}${v != null ? ` <span class="stage-note">(${calc.get(sel[k].bib).spos[i] ?? '–'})</span>` : ''}</td>`).join('') + '</tr>';
+      const lastOfDay = i === stages.length - 1 || stages[i + 1].day !== st.day;
+      if (lastOfDay) h += `<tr class="total"><td><strong>Day ${st.day} total</strong></td>` + sel.map(r => { const d = r.days[st.day]; return `<td><strong>${fmt(d && d.total)}</strong>${d && d.penalty ? ` <span class="stage-note">${d.penalty}</span>` : ''}</td>`; }).join('') + '</tr>';
+    });
+    h += `<tr><td><strong>Overall</strong></td>` + sel.map(r => `<td><strong>${fmt(r.overall.time)}</strong> <span class="stage-note">${fmtGap(calc.get(r.bib).gap[stages.length - 1])}</span></td>`).join('') + '</tr></tbody>';
+    tbl.innerHTML = h;
+  }
+
+  // ---- sidebar
+  function renderScope() {
+    document.getElementById('scope').innerHTML = scopes.map(s => `<button class="chip" data-id="${s.id}" aria-pressed="${s.id === state.scope}">${s.label}</button>`).join('');
+  }
+  function renderRiders() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    const F = field(); const calc = compute(F); const last = stages.length - 1;
+    const list = F.slice().sort((a, b) => (calc.get(a.bib).pos[last] ?? 999) - (calc.get(b.bib).pos[last] ?? 999) || a.bib - b.bib)
+      .filter(r => !q || r.name.toLowerCase().includes(q) || String(r.bib) === q);
+    document.getElementById('riders').innerHTML = list.map(r => {
+      const s = state.sel.includes(r.bib);
+      return `<label class="rider"><input type="checkbox" data-bib="${r.bib}" ${s ? 'checked' : ''}><span class="sw" style="${s ? 'background:' + colorOf(r.bib) : ''}"></span><span class="rk">${calc.get(r.bib).pos[last] ?? '–'}</span><span class="nm">${r.name}</span><span class="cat">#${r.bib} · ${r.gender === 'f' ? 'W' : 'M'} ${r.category}</span></label>`;
+    }).join('') || '<div class="rider" style="color:var(--muted)">No riders match.</div>';
+    document.getElementById('selected').innerHTML = state.sel.map(b => `<span class="tag"><span class="sw" style="background:${colorOf(b)}"></span>${byBib[b].name}<button data-rm="${b}" aria-label="Remove ${byBib[b].name}">×</button></span>`).join('')
+      || '<span class="hint" style="margin:0">Nobody highlighted yet.</span>';
+  }
+  function render() { renderScope(); renderRiders(); renderCharts(); writeHash(); }
+
+  document.getElementById('scope').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) { state.scope = b.dataset.id; render(); } });
+  document.getElementById('riders').addEventListener('change', e => { const b = e.target.dataset.bib; if (b) toggle(+b); });
+  document.getElementById('selected').addEventListener('click', e => { const b = e.target.dataset.rm; if (b) deselect(+b); });
+  document.getElementById('search').addEventListener('input', renderRiders);
+  document.getElementById('clear').addEventListener('click', () => { state.sel = []; state.slots = {}; render(); });
+  document.getElementById('top5').addEventListener('click', () => {
+    const F = field(); const calc = compute(F); const last = stages.length - 1;
+    state.sel = []; state.slots = {};
+    F.filter(r => calc.get(r.bib).pos[last]).sort((a, b) => calc.get(a.bib).pos[last] - calc.get(b.bib).pos[last]).slice(0, 5).forEach(r => select(r.bib, true));
+    render();
+  });
+  for (const [id, key] of [['gapMode', 'gapMode'], ['stageMode', 'stageMode'], ['dayMode', 'dayMode']])
+    document.getElementById(id).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; state[key] = b.dataset.v;
+      [...e.currentTarget.children].forEach(c => c.setAttribute('aria-pressed', c === b)); renderCharts(); });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderCharts);
+  let rzT; window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(renderCharts, 200); });
+
+  // ---- header
+  const daysDone = D.days.length, stagesDone = stages.length;
+  document.getElementById('title').textContent = (D.event || 'Trans Caledonia') + ' 2026';
+  document.getElementById('subtitle').innerHTML = `${riders.length} riders · ${daysDone} of 6 days ridden · ${stagesDone} timed stages · ${D.eventOver ? 'final' : 'race in progress'}. Source: <a href="${D.source}" target="_blank" rel="noopener">raceresult live timing</a>.`;
+  if (D.note) { const n = document.getElementById('note'); n.textContent = D.note; n.hidden = false; }
+  document.getElementById('footer').textContent = `Data pulled ${new Date(D.fetchedAt).toLocaleString()} · unofficial, for fun · times in min:sec, gaps in seconds`;
+
+  render();
+})();
+</script>
+</body>
+</html>
