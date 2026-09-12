@@ -134,7 +134,7 @@ def main():
         "eventId": EVENT_ID,
         "source": f"https://my.raceresult.com/{EVENT_ID}/live",
         "fetchedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "eventOver": cfg.get("EventOver", False),
+        "eventOver": bool(cfg.get("EventOver")) or len(days_meta) >= 6,
         "note": re.sub(r"<[^>]+>", "", cfg.get("TabConfig", {}).get("InfoText", "") or "").strip(),
         "days": days_meta,
         "riders": sorted(riders.values(), key=lambda r: (r["overall"]["rank"] or 9999, r["bib"])),
