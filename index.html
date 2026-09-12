@@ -66,7 +66,8 @@
     .chart-wrap { height: 320px; }
     main { gap: 10px; } section.charts { gap: 10px; } aside { gap: 10px; }
     .hint { font-size: 11.5px; }
-    .card-head .btn.reset { order: -1; }
+    .zoombar { gap: 6px; } .zoombar .btn { min-width: 40px; padding: 8px 0; } .track { height: 22px; border-radius: 11px; } .thumb { border-radius: 11px; }
+    .zoombar .range { display: none; }
     th, td { padding: 7px 8px; }
   }
   .riders { overflow: auto; max-height: 46vh; border: 1px solid var(--border); border-radius: 6px; }
@@ -91,7 +92,14 @@
   .toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
   .toggle button { border: 0; background: transparent; color: var(--ink-2); padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
   .toggle button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
-  .card-head .btn.reset { margin-left: auto; }
+  .zoombar { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .zoombar .btn { min-width: 34px; padding: 5px 0; text-align: center; font-size: 15px; line-height: 1; }
+  .zoombar .btn[data-z=reset] { font-size: 12.5px; padding: 6px 10px; }
+  .zoombar .range { color: var(--muted); font-size: 12px; min-width: 88px; text-align: right; font-variant-numeric: tabular-nums; }
+  .track { flex: 1; height: 14px; background: var(--grid); border-radius: 7px; position: relative; touch-action: none; cursor: pointer; }
+  .thumb { position: absolute; top: 0; height: 100%; background: var(--muted); border-radius: 7px; cursor: grab; min-width: 24px; }
+  .thumb:active { cursor: grabbing; background: var(--ink-2); }
+  .card-head .toggles { display: flex; gap: 8px; flex-wrap: wrap; }
   .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
   th, td { padding: 5px 8px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
@@ -131,7 +139,7 @@
         <input type="search" id="search" placeholder="Search name or bib" aria-label="Search riders">
         <div class="riders" id="riders" style="margin-top:8px"></div>
       </details>
-      <p class="hint">Tip: click a grey line in a chart to add that rider. Drag a box on a chart to zoom in (pinch on a phone), or hold Ctrl and scroll.</p>
+      <p class="hint">Tip: click a grey line in a chart to add that rider. Use the + and − buttons under a chart to zoom into stages and drag the bar to scroll.</p>
     </div>
   </aside>
 
@@ -139,23 +147,25 @@
     <div class="card">
       <div class="card-head">
         <div><h2>Gap to leader, stage by stage</h2><p class="sub">Cumulative time behind the field leader after each timed stage. Lower is better.</p></div>
-        <button class="btn reset" data-reset="cGap" hidden>Reset zoom</button><div class="toggle" id="gapMode"><button aria-pressed="true" data-v="gap">Gap to leader</button><button aria-pressed="false" data-v="rank">Position</button></div>
+        <div class="toggles"><div class="toggle yfit" data-yfit="cGap" title="Y axis range"><button aria-pressed="true" data-v="all">Whole field</button><button aria-pressed="false" data-v="sel">Fit highlighted</button></div><div class="toggle" id="gapMode"><button aria-pressed="true" data-v="gap">Gap to leader</button><button aria-pressed="false" data-v="rank">Position</button></div></div>
       </div>
       <div class="chart-wrap"><canvas id="cGap" role="img" aria-label="Cumulative gap to leader per stage"></canvas></div>
+      <div class="zoombar" data-chart="cGap"><button class="btn" data-z="out" aria-label="Zoom out">−</button><button class="btn" data-z="in" aria-label="Zoom in">+</button><div class="track" aria-label="Visible stages"><div class="thumb"></div></div><span class="range"></span><button class="btn" data-z="reset">All</button></div>
     </div>
 
     <div class="card">
       <div class="card-head">
         <div><h2>Stage by stage</h2><p class="sub">How far behind the stage winner each rider was on every stage, in seconds.</p></div>
-        <button class="btn reset" data-reset="cStage" hidden>Reset zoom</button><div class="toggle" id="stageMode"><button aria-pressed="true" data-v="gap">Gap to stage winner</button><button aria-pressed="false" data-v="rank">Stage position</button></div>
+        <div class="toggles"><div class="toggle yfit" data-yfit="cStage" title="Y axis range"><button aria-pressed="true" data-v="all">Whole field</button><button aria-pressed="false" data-v="sel">Fit highlighted</button></div><div class="toggle" id="stageMode"><button aria-pressed="true" data-v="gap">Gap to stage winner</button><button aria-pressed="false" data-v="rank">Stage position</button></div></div>
       </div>
       <div class="chart-wrap"><canvas id="cStage" role="img" aria-label="Gap to stage winner per stage"></canvas></div>
+      <div class="zoombar" data-chart="cStage"><button class="btn" data-z="out" aria-label="Zoom out">−</button><button class="btn" data-z="in" aria-label="Zoom in">+</button><div class="track" aria-label="Visible stages"><div class="thumb"></div></div><span class="range"></span><button class="btn" data-z="reset">All</button></div>
     </div>
 
     <div class="card">
       <div class="card-head">
         <div><h2>Day by day</h2><p class="sub">Overall position in the field at the end of each race day.</p></div>
-        <button class="btn reset" data-reset="cDay" hidden>Reset zoom</button><div class="toggle" id="dayMode"><button aria-pressed="true" data-v="rank">Overall position</button><button aria-pressed="false" data-v="gap">Day gap to day winner</button></div>
+        <div class="toggles"><div class="toggle yfit" data-yfit="cDay" title="Y axis range"><button aria-pressed="true" data-v="all">Whole field</button><button aria-pressed="false" data-v="sel">Fit highlighted</button></div><div class="toggle" id="dayMode"><button aria-pressed="true" data-v="rank">Overall position</button><button aria-pressed="false" data-v="gap">Day gap to day winner</button></div></div>
       </div>
       <div class="chart-wrap" style="height:300px"><canvas id="cDay" role="img" aria-label="Overall position after each day"></canvas></div>
     </div>
@@ -170,16 +180,12 @@
 <footer id="footer"></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <script>
 (async function () {
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const SLOTS = () => [1,2,3,4,5,6,7,8].map(i => css('--s' + i));
   const MAX_SEL = 8;
   const narrow = () => window.innerWidth < 700;
-  let lastZoom = 0;
-  const coarse = matchMedia('(pointer: coarse)').matches;
 
   const res = await fetch('data/results.json', { cache: 'no-store' });
   const D = await res.json();
@@ -213,7 +219,8 @@
     { id: 'f18', label: 'Women 18-39', f: r => r.gender === 'f' && r.category === '18-39' },
     { id: 'f40', label: 'Women 40-49', f: r => r.gender === 'f' && r.category === '40-49' },
   ];
-  const state = { scope: 'all', sel: [], slots: {}, gapMode: 'gap', stageMode: 'gap', dayMode: 'rank' };
+  const state = { scope: 'all', sel: [], slots: {}, gapMode: 'gap', stageMode: 'gap', dayMode: 'rank',
+    view: { cGap: null, cStage: null }, yfit: { cGap: 'all', cStage: 'all', cDay: 'all' } };
   (function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
     if (h.get('f') && scopes.some(s => s.id === h.get('f'))) state.scope = h.get('f');
@@ -312,26 +319,18 @@
   };
   Chart.register(endLabels, dayBands);
 
-  function baseOptions({ yTitle, invert, dayBands: bands, xLabels, yFmt, unit }) {
+  function baseOptions({ yTitle, invert, dayBands: bands, xLabels, yFmt, unit, view, yRange }) {
     return {
       responsive: true, maintainAspectRatio: false, animation: false, normalized: true, spanGaps: false,
       dayBands: bands,
       layout: { padding: { top: bands ? 18 : 4, right: narrow() ? 8 : 90 } },
       interaction: { mode: 'index', intersect: false },
       onClick(evt, els, chart) {
-        if (Date.now() - lastZoom < 400) return;
         const hit = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true)[0];
         if (!hit) return; const ds = chart.data.datasets[hit.datasetIndex]; if (ds.bib) toggle(ds.bib);
       },
       onHover(evt, els, chart) { const hit = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true)[0]; chart.canvas.style.cursor = hit ? 'pointer' : 'default'; },
       plugins: {
-        zoom: {
-          zoom: { drag: { enabled: true, backgroundColor: 'rgba(23,152,172,0.15)', borderColor: css('--accent'), borderWidth: 1 },
-            wheel: { enabled: true, modifierKey: 'ctrl' }, pinch: { enabled: true }, mode: 'xy',
-            onZoomComplete: ({ chart }) => { lastZoom = Date.now(); syncReset(chart); } },
-          pan: { enabled: !coarse, mode: 'xy', modifierKey: 'shift', onPanComplete: ({ chart }) => syncReset(chart) },
-          limits: { x: { min: 'original', max: 'original' }, y: { min: 'original', max: 'original' } },
-        },
         legend: { display: true, position: 'bottom', align: 'start', labels: { boxWidth: 12, boxHeight: 3, usePointStyle: false, color: css('--ink-2'),
           filter: item => item.text && !item.text.startsWith('__') } },
         tooltip: {
@@ -344,9 +343,10 @@
         },
       },
       scales: {
-        x: { grid: { color: css('--grid') }, ticks: { color: css('--muted'), maxRotation: 0, autoSkip: true }, border: { color: css('--axis') }, labels: xLabels },
+        x: { grid: { color: css('--grid') }, ticks: { color: css('--muted'), maxRotation: 0, autoSkip: true }, border: { color: css('--axis') }, labels: xLabels, ...(view ? { min: view[0], max: view[1] } : {}) },
         y: { reverse: !!invert, title: { display: true, text: yTitle, color: css('--muted') }, grid: { color: css('--grid') }, border: { color: css('--axis'), display: false },
-          ticks: { color: css('--muted'), precision: 0, callback: v => invert ? (Number.isInteger(v) && v >= 1 ? v : '') : (unit === 'time' ? fmtTick(v) : v) }, ...(invert ? { min: 1 } : { beginAtZero: true }) },
+          ticks: { color: css('--muted'), precision: 0, callback: v => invert ? (Number.isInteger(v) && v >= 1 ? v : '') : (unit === 'time' ? fmtTick(v) : v) },
+          ...(yRange ? { min: yRange[0], max: yRange[1] } : invert ? { min: 1 } : { beginAtZero: true }) },
       },
     };
   }
@@ -369,22 +369,73 @@
   }
 
   const charts = {};
-  function syncReset(chart) { const b = document.querySelector(`[data-reset="${chart.canvas.id}"]`); if (b) b.hidden = !chart.isZoomedOrPanned(); }
-  document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => { const c = charts[b.dataset.reset]; if (c) { c.resetZoom(); syncReset(c); } }));
-  function mkChart(id, cfg) { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update(); syncReset(charts[id]); } else charts[id] = new Chart(document.getElementById(id), { type: 'line', ...cfg }); }
+  function mkChart(id, cfg) { if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update(); } else charts[id] = new Chart(document.getElementById(id), { type: 'line', ...cfg }); }
+
+  // ---- x zoom / scroll (stage charts)
+  const N = stages.length, MIN_WIN = 4;
+  function getView(id) { return state.view[id] || [0, N - 1]; }
+  function setView(id, a, b) {
+    let w = Math.max(MIN_WIN, Math.min(N, Math.round(b - a + 1)));
+    a = Math.round(a); a = Math.max(0, Math.min(N - w, a));
+    state.view[id] = (a === 0 && w === N) ? null : [a, a + w - 1];
+    renderCharts();
+  }
+  function zoom(id, factor) { const [a, b] = getView(id); const w = b - a + 1, c = (a + b) / 2, nw = Math.max(MIN_WIN, Math.min(N, Math.round(w * factor))); setView(id, c - (nw - 1) / 2, c + (nw - 1) / 2); }
+  function syncBar(id) {
+    const bar = document.querySelector(`.zoombar[data-chart="${id}"]`); if (!bar) return;
+    const [a, b] = getView(id); const thumb = bar.querySelector('.thumb');
+    thumb.style.left = (a / N * 100) + '%'; thumb.style.width = ((b - a + 1) / N * 100) + '%';
+    bar.querySelector('.range').textContent = `${stages[a].label} – ${stages[b].label}`;
+    bar.querySelector('[data-z=in]').disabled = (b - a + 1) <= MIN_WIN;
+    bar.querySelector('[data-z=out]').disabled = !state.view[id];
+    bar.querySelector('[data-z=reset]').disabled = !state.view[id];
+  }
+  document.querySelectorAll('.zoombar').forEach(bar => {
+    const id = bar.dataset.chart, track = bar.querySelector('.track'), thumb = bar.querySelector('.thumb');
+    bar.addEventListener('click', e => { const z = e.target.closest('[data-z]'); if (!z) return;
+      if (z.dataset.z === 'in') zoom(id, 0.6); else if (z.dataset.z === 'out') zoom(id, 1 / 0.6); else { state.view[id] = null; renderCharts(); } });
+    let drag = null;
+    thumb.addEventListener('pointerdown', e => { e.preventDefault(); const [a, b] = getView(id); drag = { x: e.clientX, a, w: b - a + 1 }; thumb.setPointerCapture(e.pointerId); });
+    thumb.addEventListener('pointermove', e => { if (!drag) return; const dx = (e.clientX - drag.x) / track.getBoundingClientRect().width * N; const na = Math.round(drag.a + dx); if (na !== getView(id)[0]) setView(id, na, na + drag.w - 1); });
+    thumb.addEventListener('pointerup', () => drag = null); thumb.addEventListener('pointercancel', () => drag = null);
+    track.addEventListener('click', e => { if (e.target === thumb) return; const [a, b] = getView(id); const w = b - a + 1; if (w === N) return;
+      const frac = (e.clientX - track.getBoundingClientRect().left) / track.getBoundingClientRect().width; setView(id, Math.round(frac * N - w / 2), Math.round(frac * N - w / 2) + w - 1); });
+  });
+  document.querySelectorAll('.yfit').forEach(t => t.addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return;
+    state.yfit[t.dataset.yfit] = b.dataset.v; [...t.children].forEach(c => c.setAttribute('aria-pressed', c === b)); renderCharts(); }));
+
+  // y range: fit to highlighted riders (or everyone) within the visible x window
+  function yRangeFor(datasets, view, invert, fitSel) {
+    const hi = datasets.filter(d => d.highlight); const use = (fitSel && hi.length) ? hi : datasets;
+    if (!view && !(fitSel && hi.length)) return null;
+    const [a, b] = view || [0, datasets[0].data.length - 1];
+    let lo = Infinity, hiV = -Infinity;
+    for (const d of use) for (let i = a; i <= b; i++) { const v = d.data[i]; if (v == null) continue; if (v < lo) lo = v; if (v > hiV) hiV = v; }
+    if (!isFinite(lo)) return null;
+    if (invert) return [Math.max(1, Math.floor(lo) - 1), Math.ceil(hiV) + 1];
+    const pad = Math.max((hiV - lo) * 0.08, 2);
+    return [Math.max(0, Math.floor(lo - pad)), Math.ceil(hiV + pad)];
+  }
 
   function renderCharts() {
     const F = field(); const calc = compute(F);
     const stageLabels = stages.map(s => s.label + (s.cancelled ? ' ✕' : ''));
     const gapMode = state.gapMode === 'gap';
-    mkChart('cGap', { data: { labels: stageLabels, datasets: seriesFor(F, calc, c => gapMode ? c.gap : c.pos) },
-      options: baseOptions({ yTitle: gapMode ? 'behind leader' : 'overall position', invert: !gapMode, dayBands: true, yFmt: gapMode ? fmtGap : ord, unit: gapMode ? 'time' : '' }) });
+    let ds = seriesFor(F, calc, c => gapMode ? c.gap : c.pos), v = state.view.cGap;
+    mkChart('cGap', { data: { labels: stageLabels, datasets: ds },
+      options: baseOptions({ yTitle: gapMode ? 'behind leader' : 'overall position', invert: !gapMode, dayBands: true, yFmt: gapMode ? fmtGap : ord, unit: gapMode ? 'time' : '',
+        view: v, yRange: yRangeFor(ds, v, !gapMode, state.yfit.cGap === 'sel') }) });
     const stGap = state.stageMode === 'gap';
-    mkChart('cStage', { data: { labels: stageLabels, datasets: seriesFor(F, calc, c => stGap ? c.sgap : c.spos) },
-      options: baseOptions({ yTitle: stGap ? 'behind stage winner' : 'stage position', invert: !stGap, dayBands: true, yFmt: stGap ? fmtGap : ord, unit: stGap ? 'time' : '' }) });
+    ds = seriesFor(F, calc, c => stGap ? c.sgap : c.spos); v = state.view.cStage;
+    mkChart('cStage', { data: { labels: stageLabels, datasets: ds },
+      options: baseOptions({ yTitle: stGap ? 'behind stage winner' : 'stage position', invert: !stGap, dayBands: true, yFmt: stGap ? fmtGap : ord, unit: stGap ? 'time' : '',
+        view: v, yRange: yRangeFor(ds, v, !stGap, state.yfit.cStage === 'sel') }) });
     const dRank = state.dayMode === 'rank';
-    mkChart('cDay', { data: { labels: D.days.map(d => 'Day ' + d.day), datasets: seriesFor(F, calc, c => dRank ? c.dayPos : c.dayGap) },
-      options: baseOptions({ yTitle: dRank ? 'overall position' : 'behind day winner', invert: dRank, dayBands: false, yFmt: dRank ? ord : fmtGap, unit: dRank ? '' : 'time' }) });
+    ds = seriesFor(F, calc, c => dRank ? c.dayPos : c.dayGap);
+    mkChart('cDay', { data: { labels: D.days.map(d => 'Day ' + d.day), datasets: ds },
+      options: baseOptions({ yTitle: dRank ? 'overall position' : 'behind day winner', invert: dRank, dayBands: false, yFmt: dRank ? ord : fmtGap, unit: dRank ? '' : 'time',
+        yRange: yRangeFor(ds, null, dRank, state.yfit.cDay === 'sel') }) });
+    syncBar('cGap'); syncBar('cStage');
     renderTable(F, calc);
   }
 
