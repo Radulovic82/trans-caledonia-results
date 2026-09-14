@@ -18,7 +18,7 @@ from scripts import photo_common as pc  # noqa: E402
 SCENES = {"race-action", "podium", "group", "portrait", "scenery"}
 CONF = {"high", "medium", "low"}
 FIELDS = ("helmet", "kit", "bike", "other")
-THRESHOLD, MARGIN = 0.6, 0.15
+THRESHOLD, MARGIN = 0.7, 0.15
 WEIGHTS = {"helmet": 0.35, "kit": 0.4, "bike": 0.25}
 STOP = {"and", "with", "a", "the", "jersey", "helmet", "bike", "frame", "kit", "shirt", "top", "colour", "color"}
 
@@ -87,14 +87,32 @@ def build_profiles(cache):
     return prof
 
 
-def score(rider, profile):
+def token_weights(prof):
+    """Down-weight words that many riders share (black, full, face...)."""
+    w = {}
+    for f in WEIGHTS:
+        df = {}
+        for p in prof.values():
+            for t in p[f]:
+                df[t] = df.get(t, 0) + 1
+        w[f] = {t: 1.0 / (1 + n) for t, n in df.items()}
+    return w
+
+
+def score(rider, profile, weights=None):
     total, weight = 0.0, 0.0
     for f, w in WEIGHTS.items():
         a, b = tokens(rider[f]), profile[f]
         if not a or not b:
             continue
-        total += w * len(a & b) / len(a | b); weight += w
+        tw = (weights or {}).get(f, {})
+        wt = lambda t: tw.get(t, 1.0)
+        inter = sum(wt(t) for t in a & b); union = sum(wt(t) for t in a | b)
+        total += w * inter / union if union else 0.0; weight += w
     return total / weight if weight else 0.0
+
+
+MIN_APPEARANCE, MAX_BONUS = 0.45, 0.3
 
 
 def _ts(iso):
@@ -102,15 +120,20 @@ def _ts(iso):
 
 
 def propagate(index, cache, known):
+    """Infer numbers for riders whose plate was not readable: the kit must match a rider read
+    by number elsewhere (appearance), helped by being shot around the same time or in the same
+    burst by the same photographer. Only race-action frames qualify; group and podium shots are
+    full of people who are not the riders in question."""
     photos = index["photos"]
     prof = build_profiles(cache)
+    weights = token_weights(prof)
     seen = []  # (bib, folder, ts, seq) for every number read anywhere
     for fid, e in cache.items():
         meta = photos.get(fid)
         if not meta:
             continue
         for n in e["numbers"]:
-            seen.append((n["bib"], meta["folder"], _ts(meta["capturedAt"]), meta["seq"]))
+            seen.append((n["bib"], meta["folder"], _ts(meta["capturedAt"]), pc.seq_number(meta["name"])))
     out = {}
     for fid, e in cache.items():
         meta = photos.get(fid)
@@ -118,23 +141,28 @@ def propagate(index, cache, known):
             continue
         ids = [{"bib": n["bib"], "method": "number", "confidence": n["confidence"]} for n in e["numbers"]]
         taken = {n["bib"] for n in e["numbers"]}
-        ts, seq = _ts(meta["capturedAt"]), meta["seq"]
+        ts, seq = _ts(meta["capturedAt"]), pc.seq_number(meta["name"])
         for r in e["riders"]:
-            if r["bib"] is not None:
+            if r["bib"] is not None or e["scene"] != "race-action":
+                continue
+            if sum(bool(tokens(r[f])) for f in WEIGHTS) < 2:
                 continue
             scores = {}
             for bib, p in prof.items():
                 if bib in taken or bib not in known:
                     continue
-                s = score(r, p)
+                s = score(r, p, weights)
+                if s < MIN_APPEARANCE:
+                    continue
                 near = [x for x in seen if x[0] == bib and x[1] == meta["folder"]]
+                bonus = 0.0
                 if ts and any(x[2] and abs(x[2] - ts) <= 90 for x in near):
-                    s += 0.3
+                    bonus += 0.3
                 elif ts and any(x[2] and abs(x[2] - ts) <= 600 for x in near):
-                    s += 0.15
+                    bonus += 0.15
                 if seq is not None and any(x[3] is not None and abs(x[3] - seq) <= 3 for x in near):
-                    s += 0.2
-                scores[bib] = min(s, 1.0)
+                    bonus += 0.2
+                scores[bib] = min(s + min(bonus, MAX_BONUS), 1.0)
             ranked = sorted(scores.items(), key=lambda kv: -kv[1])
             if ranked and ranked[0][1] >= THRESHOLD and (len(ranked) == 1 or ranked[0][1] - ranked[1][1] >= MARGIN):
                 bib, s = ranked[0]
@@ -193,7 +221,7 @@ def build_manifest(index, cache, overrides, results):
         if photo is None:
             summary["hidden"] += 1; continue
         photos.append(photo)
-    photos.sort(key=lambda p: (_day_key(p["day"]), index["photos"][p["fileId"]]["seq"] or 0, p["name"]))
+    photos.sort(key=lambda p: (_day_key(p["day"]), pc.seq_number(p["name"]) or 0, p["name"]))
     return {"generated": pc.now_iso(), "credits": pc.CREDITS, "photos": photos}, summary
 
 
