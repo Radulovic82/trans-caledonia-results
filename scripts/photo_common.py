@@ -39,8 +39,15 @@ def view_url(file_id):
 
 def seq_number(name):
     """DSC_0055.jpg -> 55; 'Trans Caledonia - Day 1 - Pete Scullion-50.jpg' -> 50."""
-    stem = re.sub(r"\s*\(\d+\)\s*$", "", Path(name).stem)
-    m = re.search(r"_(\d{3,})", stem) or re.search(r"-(\d+)$", stem)
+    stem = Path(name).stem
+    paren = re.search(r"\((\d+)\)\s*$", stem)
+    stem = re.sub(r"\s*\(\d+\)\s*$", "", stem)
+    m = re.search(r"_(\d{3,})", stem)
+    if m:
+        return int(m.group(1))
+    if paren:
+        return int(paren.group(1))
+    m = re.search(r"-(\d+)$", stem)
     return int(m.group(1)) if m else None
 
 

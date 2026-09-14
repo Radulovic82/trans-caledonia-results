@@ -17,6 +17,7 @@ class HelpersTest(unittest.TestCase):
         self.assertIsNone(pc.seq_number("podium.jpg"))
         self.assertEqual(pc.seq_number("Trans Caledonia - Day 1 - Pete Scullion-50.jpg"), 50)
         self.assertEqual(pc.seq_number("Trans Caledonia - Day 1 - Pete Scullion-3-12.jpg"), 12)
+        self.assertEqual(pc.seq_number("Trans Caledonia - Day 4 - Peter Scullion-80 (62).jpg"), 62)
 
     def test_photographer_for(self):
         self.assertEqual(pc.photographer_for("Podiums - Credit Sadie Aldridge", "DSC_1.jpg"), "Sadie Aldridge")

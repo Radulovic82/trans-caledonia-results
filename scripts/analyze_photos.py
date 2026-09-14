@@ -18,7 +18,7 @@ from scripts import photo_common as pc  # noqa: E402
 SCENES = {"race-action", "podium", "group", "portrait", "scenery"}
 CONF = {"high", "medium", "low"}
 FIELDS = ("helmet", "kit", "bike", "other")
-THRESHOLD, MARGIN = 0.7, 0.15
+THRESHOLD, MARGIN = 0.75, 0.15
 WEIGHTS = {"helmet": 0.35, "kit": 0.4, "bike": 0.25}
 STOP = {"and", "with", "a", "the", "jersey", "helmet", "bike", "frame", "kit", "shirt", "top", "colour", "color"}
 
@@ -112,7 +112,7 @@ def score(rider, profile, weights=None):
     return total / weight if weight else 0.0
 
 
-MIN_APPEARANCE, MAX_BONUS = 0.45, 0.3
+MIN_APPEARANCE, MAX_BONUS = 0.6, 0.25
 
 
 def _ts(iso):
