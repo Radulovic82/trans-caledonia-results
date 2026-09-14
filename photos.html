@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trans Caledonia 2026 photos</title>
+<meta name="description" content="Race photos from the MTB Enduro Trans Caledonia 2026, sorted by rider.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav" aria-label="Pages"><a href="./">Results</a><a href="photos.html" aria-current="page">Photos</a></nav>
+<header>
+  <h1>Trans Caledonia 2026 photos</h1>
+  <p id="subtitle">Loading photos…</p>
+</header>
+<div class="credits" id="credits" hidden></div>
+
+<main class="photos-main">
+  <aside>
+    <div class="card">
+      <h2>Day</h2>
+      <div class="chips" id="days"></div>
+    </div>
+    <div class="card">
+      <h2>View</h2>
+      <p class="sub">Unidentified shows photos where a rider could not be matched to a number.</p>
+      <div class="chips" id="views">
+        <button class="chip" data-v="all" aria-pressed="true">All photos</button>
+        <button class="chip" data-v="unidentified" aria-pressed="false">Unidentified</button>
+      </div>
+    </div>
+    <div class="card riders-card">
+      <h2>Riders</h2>
+      <p class="sub">Pick riders to see every photo they were spotted in. Share the URL to send someone their photos.</p>
+      <div class="selected" id="selected"></div>
+      <div class="row" style="margin:8px 0"><button class="btn" id="clear">Clear</button></div>
+      <input type="search" id="search" placeholder="Search name or bib" aria-label="Search riders">
+      <div class="riders" id="riders" style="margin-top:8px"></div>
+      <p class="hint">Numbers were read from bibs and number plates. A ≈ badge means the rider was matched by kit and timing rather than a readable number. Spotted a mistake? <a href="https://github.com/Radulovic82/trans-caledonia-results/issues" target="_blank" rel="noopener">Let me know</a>.</p>
+    </div>
+  </aside>
+
+  <section>
+    <div class="card">
+      <p class="count" id="count"></p>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty" hidden></div>
+      <div id="sentinel" style="height:1px"></div>
+    </div>
+  </section>
+</main>
+<footer id="footer"></footer>
+
+<div class="lb" id="lb" hidden role="dialog" aria-label="Photo">
+  <button class="close" id="lbClose" aria-label="Close">×</button>
+  <button class="prev" id="lbPrev" aria-label="Previous">‹</button>
+  <img id="lbImg" alt="">
+  <button class="next" id="lbNext" aria-label="Next">›</button>
+  <div class="bar" id="lbBar"></div>
+</div>
+
+<script>
+(async function () {
+  const PAGE = 60;
+  const thumb = (id, w) => `https://drive.google.com/thumbnail?id=${id}&sz=w${w}`;
+  const view = id => `https://drive.google.com/file/d/${id}/view`;
+  const dayLabel = d => /^\d+$/.test(d) ? 'Day ' + d : d;
+  const [R, P] = await Promise.all([
+    fetch('data/results.json', { cache: 'no-store' }).then(r => r.json()),
+    fetch('data/photos.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : { photos: [], credits: '' }),
+  ]);
+  const riders = R.riders.slice().sort((a, b) => (a.overall.rank || 9999) - (b.overall.rank || 9999) || a.bib - b.bib);
+  const byBib = Object.fromEntries(riders.map(r => [r.bib, r]));
+  const photos = P.photos;
+  const isNum = d => /^\d+$/.test(d);
+  const days = [...new Set(photos.map(p => p.day))].sort((a, b) => isNum(a) && isNum(b) ? a - b : isNum(a) ? -1 : isNum(b) ? 1 : a.localeCompare(b));
+
+  const state = { sel: [], day: null, v: 'all', shown: PAGE };
+  (function readHash() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    state.sel = (h.get('r') || '').split(',').map(Number).filter(b => byBib[b]);
+    if (h.get('d') && days.includes(h.get('d'))) state.day = h.get('d');
+    if (h.get('v') === 'unidentified') state.v = 'unidentified';
+  })();
+  function writeHash() {
+    const p = new URLSearchParams();
+    if (state.sel.length) p.set('r', state.sel.join(','));
+    if (state.day) p.set('d', state.day);
+    if (state.v !== 'all') p.set('v', state.v);
+    history.replaceState(null, '', p.toString() ? '#' + p : location.pathname);
+  }
+
+  function filtered() {
+    return photos.filter(p => (!state.day || p.day === state.day)
+      && (state.v !== 'unidentified' || p.unidentifiedRiders > 0)
+      && (!state.sel.length || state.sel.some(b => p.bibs.includes(b))));
+  }
+  let current = [];
+
+  function badge(p) {
+    return p.identifications.filter(i => byBib[i.bib]).map(i => `<span class="bib${i.method === 'inferred' ? ' inf' : ''}" title="${byBib[i.bib].name}${i.method === 'inferred' ? ' (matched by appearance)' : i.method === 'manual' ? ' (corrected by hand)' : ''}">${i.method === 'inferred' ? '≈' : '#'}${i.bib}</span>`).join('');
+  }
+  function renderGrid(reset) {
+    if (reset) { state.shown = PAGE; current = filtered(); }
+    const grid = document.getElementById('grid');
+    grid.innerHTML = current.slice(0, state.shown).map((p, i) => `<button class="ph" data-i="${i}" aria-label="${p.name}"><img loading="lazy" src="${thumb(p.fileId, 400)}" alt="${p.name}"><span class="day">${dayLabel(p.day)}</span><span class="bibs">${badge(p)}</span></button>`).join('');
+    document.getElementById('count').textContent = current.length ? `${current.length} photo${current.length === 1 ? '' : 's'}${state.shown < current.length ? `, showing ${state.shown}` : ''}` : '';
+    const empty = document.getElementById('empty');
+    empty.hidden = current.length > 0;
+    empty.textContent = !photos.length ? 'No photos yet. Check back soon.' : state.sel.length
+      ? `No photos found for ${state.sel.map(b => byBib[b].name).join(', ')}${state.day ? ' on this day' : ''} yet. Not every rider was caught on camera, and some numbers could not be read.`
+      : 'No photos match these filters.';
+  }
+  function renderSide() {
+    document.getElementById('days').innerHTML = [`<button class="chip" data-d="" aria-pressed="${!state.day}">All days</button>`]
+      .concat(days.map(d => `<button class="chip" data-d="${d}" aria-pressed="${state.day === d}">${dayLabel(d)}</button>`)).join('');
+    [...document.getElementById('views').children].forEach(c => c.setAttribute('aria-pressed', c.dataset.v === state.v));
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    const counts = {}; for (const p of photos) for (const b of p.bibs) counts[b] = (counts[b] || 0) + 1;
+    document.getElementById('riders').innerHTML = riders.filter(r => !q || r.name.toLowerCase().includes(q) || String(r.bib) === q).map(r =>
+      `<label class="rider"><input type="checkbox" data-bib="${r.bib}" ${state.sel.includes(r.bib) ? 'checked' : ''}><span class="rk" title="photos">${counts[r.bib] || 0}</span><span class="nm">${r.name}</span><span class="cat">#${r.bib} · ${r.gender === 'f' ? 'W' : 'M'} ${r.category}</span></label>`).join('')
+      || '<div class="rider" style="color:var(--muted)">No riders match.</div>';
+    document.getElementById('selected').innerHTML = state.sel.map(b => `<span class="tag">${byBib[b].name}<button data-rm="${b}" aria-label="Remove ${byBib[b].name}">×</button></span>`).join('')
+      || '<span class="hint" style="margin:0">Showing everyone.</span>';
+  }
+  function render() { renderSide(); renderGrid(true); writeHash(); }
+
+  document.getElementById('days').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (!b) return; state.day = b.dataset.d || null; render(); });
+  document.getElementById('views').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; state.v = b.dataset.v; render(); });
+  document.getElementById('riders').addEventListener('change', e => { const b = +e.target.dataset.bib; if (!b) return; state.sel = state.sel.includes(b) ? state.sel.filter(x => x !== b) : [...state.sel, b]; render(); });
+  document.getElementById('selected').addEventListener('click', e => { const b = e.target.dataset.rm; if (b) { state.sel = state.sel.filter(x => x !== +b); render(); } });
+  document.getElementById('search').addEventListener('input', renderSide);
+  document.getElementById('clear').addEventListener('click', () => { state.sel = []; render(); });
+  new IntersectionObserver(es => { if (es[0].isIntersecting && state.shown < current.length) { state.shown += PAGE; renderGrid(false); } }, { rootMargin: '600px' })
+    .observe(document.getElementById('sentinel'));
+
+  // lightbox
+  let lbIdx = -1;
+  const lb = document.getElementById('lb');
+  function openLb(i) {
+    lbIdx = i; const p = current[i]; if (!p) return;
+    document.getElementById('lbImg').src = thumb(p.fileId, 1600);
+    const who = p.identifications.filter(x => byBib[x.bib]).map(x => `${x.method === 'inferred' ? '≈ ' : ''}${byBib[x.bib].name} (#${x.bib})`).join(', ');
+    document.getElementById('lbBar').innerHTML = `<span>${dayLabel(p.day)} · ${p.name}${p.photographer ? ' · photo: ' + p.photographer : ''}</span>${who ? `<span>${who}</span>` : ''}<a href="${view(p.fileId)}" target="_blank" rel="noopener">View original / download</a><span>${i + 1} / ${current.length}</span>`;
+    lb.hidden = false; document.body.style.overflow = 'hidden';
+  }
+  function closeLb() { lb.hidden = true; document.body.style.overflow = ''; }
+  const step = d => openLb((lbIdx + d + current.length) % current.length);
+  document.getElementById('grid').addEventListener('click', e => { const b = e.target.closest('.ph'); if (b) openLb(+b.dataset.i); });
+  document.getElementById('lbClose').addEventListener('click', closeLb);
+  document.getElementById('lbPrev').addEventListener('click', () => step(-1));
+  document.getElementById('lbNext').addEventListener('click', () => step(1));
+  lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', e => { if (lb.hidden) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
+
+  const idPhotos = photos.filter(p => p.bibs.length).length;
+  const spotted = new Set(photos.flatMap(p => p.bibs)).size;
+  document.getElementById('subtitle').textContent = photos.length
+    ? `${photos.length} photos · ${idPhotos} with riders identified · ${spotted} riders spotted`
+    : 'No photos have been added yet.';
+  if (P.credits) { const c = document.getElementById('credits'); c.textContent = P.credits; c.hidden = false; }
+  document.getElementById('footer').textContent = P.generated ? `Photo list updated ${new Date(P.generated).toLocaleString()} · photos stay in the organisers' Google Drive, this page only links to them` : '';
+  render();
+})();
+</script>
+</body>
+</html>
