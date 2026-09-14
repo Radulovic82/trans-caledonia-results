@@ -32,7 +32,7 @@ class ParseTest(unittest.TestCase):
     def test_plan_downloads_skips_known(self):
         files = [{"id": "A", "name": "a.jpg", "folderId": "F", "folder": "Day 1"},
                  {"id": "B", "name": "b.jpg", "folderId": "F", "folder": "Day 1"}]
-        index = {"photos": {"A": {"name": "a.jpg"}}}
+        index = {"photos": {"A": {"name": "a.jpg", "fetched": True}}}
         self.assertEqual([f["id"] for f in fp.plan_downloads(files, index, {})], ["B"])
         self.assertEqual(fp.plan_downloads(files, index, {"B": {}}), [])
 

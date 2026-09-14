@@ -6,6 +6,7 @@ download analysis-size thumbnails for photos not seen before.
     python3 scripts/fetch_photos.py --dry-run  # just list what is new
 """
 import io, re, sys, time, urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from html import unescape
 from pathlib import Path
 
@@ -71,7 +72,7 @@ def exif_time(jpeg_head):
 
 
 def plan_downloads(files, index, cache):
-    seen = set(index.get("photos", {})) | set(cache)
+    seen = {k for k, v in index.get("photos", {}).items() if v.get("fetched")} | set(cache)
     return [f for f in files if f["id"] not in seen]
 
 
@@ -97,25 +98,32 @@ def main(argv):
             print(f"  {f['folder']}/{f['name']} {f['id']}")
         return 0
     pc.TMP.mkdir(parents=True, exist_ok=True)
-    done = 0
     for f in files:
-        fid = f["id"]
         day, photographer = pc.folder_meta(f["folder"])
-        entry = index["photos"].get(fid) or {}
+        entry = index["photos"].get(f["id"]) or {"capturedAt": None}
         entry.update({"name": f["name"], "folderId": f["folderId"], "folder": f["folder"], "day": day,
                       "photographer": photographer, "seq": pc.seq_number(f["name"])})
-        if fid in new_ids:
-            dest = pc.TMP / f"{fid}.jpg"
-            if not dest.exists():
-                dest.write_bytes(http(pc.thumb_url(fid, 1600)))
-            head = http(f"https://drive.google.com/uc?export=download&id={fid}", {"Range": "bytes=0-262143"})
-            entry["capturedAt"] = exif_time(head)
+        index["photos"][f["id"]] = entry
+
+    def grab(f):
+        fid = f["id"]
+        dest = pc.TMP / f"{fid}.jpg"
+        if not dest.exists():
+            dest.write_bytes(http(pc.thumb_url(fid, 1600)))
+        head = http(f"https://drive.google.com/uc?export=download&id={fid}", {"Range": "bytes=0-262143"})
+        return fid, exif_time(head)
+
+    done = 0
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for fut in as_completed([ex.submit(grab, f) for f in new]):
+            fid, captured = fut.result()
+            index["photos"][fid]["capturedAt"] = captured
+            index["photos"][fid]["fetched"] = True
             done += 1
-            print(f"[{done}/{len(new)}] {f['folder']}/{f['name']} {entry['capturedAt'] or 'no exif'}")
-        entry.setdefault("capturedAt", None)
-        index["photos"][fid] = entry
-        if fid in new_ids and done % 25 == 0:
-            index["fetchedAt"] = pc.now_iso(); pc.save_json(pc.INDEX, index)
+            e = index["photos"][fid]
+            print(f"[{done}/{len(new)}] {e['folder']}/{e['name']} {captured or 'no exif'}", flush=True)
+            if done % 25 == 0:
+                index["fetchedAt"] = pc.now_iso(); pc.save_json(pc.INDEX, index)
     index["fetchedAt"] = pc.now_iso()
     pc.save_json(pc.INDEX, index)
     print(f"wrote {pc.INDEX}: {len(index['photos'])} photos, {len(new)} new")
