@@ -202,7 +202,7 @@ def build_manifest(index, cache, overrides, results):
 def cmd_worklist(argv):
     index = pc.load_json(pc.INDEX, {"photos": {}})
     cache = pc.load_json(pc.CACHE, {})
-    todo = pending(index, cache)
+    todo = [fid for fid in pending(index, cache) if (pc.TMP / f"{fid}.jpg").exists()]
     if "--limit" in argv:
         todo = todo[: int(argv[argv.index("--limit") + 1])]
     rows = [{"fileId": fid, "path": str(pc.TMP / f"{fid}.jpg"), "folder": index["photos"][fid]["folder"],
