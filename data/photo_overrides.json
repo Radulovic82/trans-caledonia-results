@@ -1,0 +1,4 @@
+{
+ "_comment": "Manual corrections keyed by Drive fileId. Fields: add_bibs, remove_bibs, hide, photographer. Keys starting with _ are ignored.",
+ "_example": {"add_bibs": [42], "remove_bibs": [47], "hide": false, "photographer": "Sadie Aldridge"}
+}
