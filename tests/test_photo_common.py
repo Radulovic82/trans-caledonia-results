@@ -15,6 +15,16 @@ class HelpersTest(unittest.TestCase):
         self.assertEqual(pc.seq_number("DSC_0055.jpg"), 55)
         self.assertEqual(pc.seq_number("DSC_0055 (1).jpg"), 55)
         self.assertIsNone(pc.seq_number("podium.jpg"))
+        self.assertEqual(pc.seq_number("Trans Caledonia - Day 1 - Pete Scullion-50.jpg"), 50)
+        self.assertEqual(pc.seq_number("Trans Caledonia - Day 1 - Pete Scullion-3-12.jpg"), 12)
+
+    def test_photographer_for(self):
+        self.assertEqual(pc.photographer_for("Podiums - Credit Sadie Aldridge", "DSC_1.jpg"), "Sadie Aldridge")
+        self.assertEqual(pc.photographer_for("Day 1", "Trans Caledonia - Day 1 - Pete Scullion-50.jpg"), "Pete Scullion")
+        self.assertEqual(pc.photographer_for("Day 1", "Trans Caledonia - Day 1 - Peter Scullion.jpg"), "Pete Scullion")
+        self.assertEqual(pc.photographer_for("Day 1", "Trans Caledonia - Day 0 - Pete Scullion (3).jpg"), "Pete Scullion")
+        self.assertEqual(pc.photographer_for("Day 1", "Trans Caledonia - Day 1 - Pete Scullion-3-12.jpg"), "Pete Scullion")
+        self.assertIsNone(pc.photographer_for("Day 1", "DSC_0001.jpg"))
 
     def test_folder_meta(self):
         self.assertEqual(pc.folder_meta("Day 3"), ("3", None))

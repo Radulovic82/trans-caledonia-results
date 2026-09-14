@@ -38,8 +38,21 @@ def view_url(file_id):
 
 
 def seq_number(name):
-    m = re.search(r"_(\d{3,})", name)
+    """DSC_0055.jpg -> 55; 'Trans Caledonia - Day 1 - Pete Scullion-50.jpg' -> 50."""
+    stem = re.sub(r"\s*\(\d+\)\s*$", "", Path(name).stem)
+    m = re.search(r"_(\d{3,})", stem) or re.search(r"-(\d+)$", stem)
     return int(m.group(1)) if m else None
+
+
+def photographer_for(folder_name, file_name):
+    """Credit from the folder name ('... - Credit X') or the file name ('... - Day 1 - Pete Scullion-50.jpg')."""
+    _, credit = folder_meta(folder_name)
+    if credit:
+        return credit
+    m = re.search(r"-\s*([A-Z][a-z]+(?: [A-Z][a-z]+)+?)(?:[- ]\d+)*(?:\s*\(\d+\))?$", Path(file_name).stem)
+    if m and not m.group(1).startswith("Day"):
+        return m.group(1).replace("Peter ", "Pete ")
+    return None
 
 
 def folder_meta(folder_name):

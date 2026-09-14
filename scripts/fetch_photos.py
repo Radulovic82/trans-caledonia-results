@@ -99,10 +99,10 @@ def main(argv):
         return 0
     pc.TMP.mkdir(parents=True, exist_ok=True)
     for f in files:
-        day, photographer = pc.folder_meta(f["folder"])
+        day, _ = pc.folder_meta(f["folder"])
         entry = index["photos"].get(f["id"]) or {"capturedAt": None}
         entry.update({"name": f["name"], "folderId": f["folderId"], "folder": f["folder"], "day": day,
-                      "photographer": photographer, "seq": pc.seq_number(f["name"])})
+                      "photographer": pc.photographer_for(f["folder"], f["name"]), "seq": pc.seq_number(f["name"])})
         index["photos"][f["id"]] = entry
 
     def grab(f):

@@ -185,7 +185,8 @@ def build_manifest(index, cache, overrides, results):
         identified = {i["bib"] for i in ids} | set(unmatched)
         unid = max(0, len(e["riders"]) - len(identified)) if e["riders"] else 0
         summary["unidentified"] += unid
-        photo = {"fileId": fid, "name": meta["name"], "day": meta["day"], "photographer": meta.get("photographer"),
+        photo = {"fileId": fid, "name": meta["name"], "day": meta["day"],
+                 "photographer": meta.get("photographer") or pc.photographer_for(meta["folder"], meta["name"]),
                  "capturedAt": meta.get("capturedAt"), "bibs": sorted({i["bib"] for i in ids}), "identifications": ids,
                  "unmatched": unmatched, "scene": e["scene"], "unidentifiedRiders": unid}
         photo = apply_overrides(photo, overrides.get(fid))
