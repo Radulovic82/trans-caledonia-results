@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-15T11:05:58Z",
+ "generated": "2026-09-15T11:07:01Z",
  "credits": "Photos by the Trans Caledonia Enduro media team: Sadie Aldridge, Pete Scullion, Nico Turner, Nick Clark. Please credit the creator when sharing.",
  "photos": [
   {
@@ -19790,16 +19790,8 @@
    "day": "6",
    "photographer": null,
    "capturedAt": "2026-09-12T08:55:12Z",
-   "bibs": [
-    10
-   ],
-   "identifications": [
-    {
-     "bib": 10,
-     "method": "inferred",
-     "confidence": 0.76
-    }
-   ],
+   "bibs": [],
+   "identifications": [],
    "unmatched": [],
    "scene": "race-action",
    "unidentifiedRiders": 1
@@ -19810,16 +19802,8 @@
    "day": "6",
    "photographer": null,
    "capturedAt": "2026-09-12T08:55:12Z",
-   "bibs": [
-    10
-   ],
-   "identifications": [
-    {
-     "bib": 10,
-     "method": "inferred",
-     "confidence": 0.76
-    }
-   ],
+   "bibs": [],
+   "identifications": [],
    "unmatched": [],
    "scene": "race-action",
    "unidentifiedRiders": 1

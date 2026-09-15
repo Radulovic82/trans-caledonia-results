@@ -1,4 +1,23 @@
 {
  "_comment": "Manual corrections keyed by Drive fileId. Fields: add_bibs, remove_bibs, hide, photographer. Keys starting with _ are ignored.",
- "_example": {"add_bibs": [42], "remove_bibs": [47], "hide": false, "photographer": "Sadie Aldridge"}
+ "_example": {
+  "add_bibs": [
+   42
+  ],
+  "remove_bibs": [
+   47
+  ],
+  "hide": false,
+  "photographer": "Sadie Aldridge"
+ },
+ "18ic3SjSavgKTIRGiIKtBo-p4c8isCvXo": {
+  "remove_bibs": [
+   10
+  ]
+ },
+ "1-cEMkBHu1erv_6Ow6_QBEghxiOousL41": {
+  "remove_bibs": [
+   10
+  ]
+ }
 }
